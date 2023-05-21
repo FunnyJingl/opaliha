@@ -1,0 +1,12 @@
+version: 0.0.0
+config:
+  optical_system:
+    type: sequential
+
+    surfaces: 
+      - surface: positive
+        comment: "first"
+        thickness: 3.1
+        semi_diameter: 1.1
+        glass: tf-5
+
