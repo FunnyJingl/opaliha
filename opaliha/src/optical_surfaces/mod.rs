@@ -1,1 +1,1 @@
-pub mod optical_surfaces;
+pub mod optical_surface;
