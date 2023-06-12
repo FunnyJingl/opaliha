@@ -1,8 +1,8 @@
 enum FieldType {
-    ANGLE_DEG,
-    OJECT_HEIGHT,
-    PARAX_IMAGE_HEIGHT,
-    REAL_IMAGE_HEIGHT,
+    AngleDeg,
+    ObjectHeight,
+    ParaxImageHeight,
+    RealImageHeight,
 }
 
 enum FieldNormalization {
@@ -11,16 +11,20 @@ enum FieldNormalization {
 
 pub struct FieldRaw {
     field_type: FieldType,
-    xfield: float,
-    yfield: float,
-    weight: float,
-    vdx: float,
-    vdy: float,
-    vcx: float,
-    vcy: float,
-    van: float,
+    xfield: f64,
+    yfield: f64,
+    weight: f64,
+    vdy: f64,
+    vcx: f64,
+    vcy: f64,
+    van: f64,
 }
 
 pub struct FieldData {
     rows: Vec<FieldRaw>,
+}
+
+pub struct SequentialParameters {
+    pub field_data: FieldData,
+    pub name: String,
 }

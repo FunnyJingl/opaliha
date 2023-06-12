@@ -11,6 +11,16 @@ pub struct Direction3 {
     pub kz: f64,
 }
 
+impl Default for Direction3 {
+    fn default() -> Self {
+        Self {
+            kx: 0.,
+            ky: 0.,
+            kz: 1.,
+        }
+    }
+}
+
 pub struct Unit3 {
     pub p: Point3,
     pub dir: Direction3,
@@ -99,4 +109,14 @@ impl Vector3 {
             },
         }
     }
+}
+
+pub struct Segment3 {
+    pub p1: Point3,
+    pub p2: Point3,
+}
+
+pub struct Segment2 {
+    pub p1: Point2,
+    pub p2: Point2,
 }

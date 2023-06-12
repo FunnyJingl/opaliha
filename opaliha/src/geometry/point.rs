@@ -27,3 +27,19 @@ impl Point3 {
         }
     }
 }
+
+impl Default for Point3 {
+    fn default() -> Self {
+        Self {
+            x: 0.,
+            y: 0.,
+            z: 0.,
+        }
+    }
+}
+
+impl Default for Point2 {
+    fn default() -> Self {
+        Self { x: 0., y: 0. }
+    }
+}
