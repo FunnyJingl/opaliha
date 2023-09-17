@@ -1,5 +1,5 @@
-enum Coordinate {
-    X,
-    Y,
-    Z
-}
+// enum Coordinate {
+//     X,
+//     Y,
+//     Z
+// }
