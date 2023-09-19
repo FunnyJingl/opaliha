@@ -1,6 +1,9 @@
 use std::ops::{Mul, Add, Sub, Neg, Div};
 use std::ops::Index;
 use num::abs;
+// use num::Float::sqrt;
+use num::Float;
+use assert_approx_eq::assert_approx_eq;
 
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -8,6 +11,11 @@ pub struct Vector3 {
     pub x: f64,
     pub y: f64,
     pub z: f64
+}
+
+
+pub fn zero_vector() -> Vector3 {
+    Vector3{x: 0., y: 0., z: 0.}
 }
 
 
@@ -56,6 +64,44 @@ impl Vector3 {
             y: self.z * rhs.x - self.x * rhs.z,
             z: self.x * rhs.y - self.y * rhs.x
         }
+    }
+
+    pub fn norm(&self) -> f64 {
+        Float::sqrt(self.x.powi(2) + self.y.powi(2) + self.z.powi(2))
+    }
+
+    pub fn normalize(&mut self) -> &mut Vector3 {
+        let norm = self.norm();
+        self.x = self.x / norm;
+        self.y = self.y / norm;
+        self.z = self.z / norm;
+        self
+    }
+
+    pub fn clone_normalized(&self) -> Vector3 {
+        let norm = self.norm();
+        Vector3{x: self.x / norm, y: self.y / norm, z: self.z / norm}
+    }
+
+    pub fn build_coordinate_system(&self) -> (Vector3, Vector3, Vector3) {
+        let mut v1 = self.clone();
+        v1 = *v1.normalize();
+        let mut v2 = zero_vector();
+
+        if abs(v1.x) > abs(v2.y) {
+            let norm_value =  Float::sqrt(v1.x * v1.x + v1.z * v1.z);
+            v2.x = -v1.z;
+            v2.z = v1.x;
+            v2 = v2 / norm_value;
+        } else {
+            v2.y = v1.z;
+            v2.z = -v1.y;
+            v2 = v2 / Float::sqrt(v1.y * v1.y + v1.z * v1.z);
+        }
+
+        let mut v3 = v1.cross_product(v2);
+
+        (v1, v2, v3)
     }
 }
 
@@ -127,6 +173,7 @@ impl Div<f64> for Vector3 {
 
 #[cfg(test)]
 mod tests {
+    use std::num::FpCategory::Nan;
     use super::*;
 
     #[test]
@@ -170,6 +217,7 @@ mod tests {
 
     #[test]
     fn test_vector_ops() {
+        let v0 = Vector3{x: 0., y: 0., z: 0.};
         let v1 = Vector3{x: 1., y: 2., z: 3.};
         let v2 = Vector3{x: 4., y: 5., z: 6.};
         let v3 = Vector3{x: -7., y: -8., z: -9.};
@@ -198,5 +246,50 @@ mod tests {
         assert_eq!(v_abs.x, 7.);
         assert_eq!(v_abs.y, 8.);
         assert_eq!(v_abs.z, 9.);
+
+        let v0_normalized = v0.clone().clone_normalized();
+        let v1_normalized = v1.clone().clone_normalized();
+        let v2_normalized = v2.clone().clone_normalized();
+        let v3_normalized = v3.clone().clone_normalized();
+        assert!(v0_normalized.norm().is_nan());
+        assert_approx_eq!(v1_normalized.norm(), 1.);
+        assert_approx_eq!(v2_normalized.norm(), 1.);
+        assert_approx_eq!(v3_normalized.norm(), 1.);
+
+        let v0_norm = v0.norm();
+        let v1_norm = v1.norm();
+        let v2_norm = v2.norm();
+        let v3_norm = v3.norm();
+        assert_approx_eq!(v0_norm, 0.);
+        assert_approx_eq!(v1_norm, 3.7416573867739413);
+        assert_approx_eq!(v2_norm, 8.774964387392123);
+        assert_approx_eq!(v3_norm, 13.92838827718412);
+
+        let dot_prod_0_1 = v0.dot(v1);
+        let dot_prod_1_2 = v1.dot(v2);
+        let dot_prod_2_3 = v2.dot(v3);
+        let dot_prod_3_1 = v3.dot(v1);
+        assert_eq!(dot_prod_0_1, 0.);
+        assert_eq!(dot_prod_1_2, 32.);
+        assert_eq!(dot_prod_2_3, -122.);
+        assert_eq!(dot_prod_3_1, -50.);
+
+        let dot_prod_0_1 = v0.abs_dot(v1);
+        let dot_prod_1_2 = v1.abs_dot(v2);
+        let dot_prod_2_3 = v2.abs_dot(v3);
+        let dot_prod_3_1 = v3.abs_dot(v1);
+        assert_eq!(dot_prod_0_1, 0.);
+        assert_eq!(dot_prod_1_2, 32.);
+        assert_eq!(dot_prod_2_3, 122.);
+        assert_eq!(dot_prod_3_1, 50.);
+
+        let cross_prod_0_1 = v0.cross_product(v1);
+        let cross_prod_1_2 = v1.cross_product(v2);
+        let cross_prod_2_3 = v2.cross_product(v3);
+        let cross_prod_3_1 = v3.cross_product(v1);
+        assert_eq!(cross_prod_0_1, Vector3{x:0., y:0., z:0.});
+        assert_eq!(cross_prod_1_2, Vector3{x: -3., y: 6., z: -3.});
+        assert_eq!(cross_prod_2_3, Vector3{x: 3., y: -6., z: 3.});
+        assert_eq!(cross_prod_3_1, Vector3{x: -6., y: 12., z: -6.});
     }
 }
