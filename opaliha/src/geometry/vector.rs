@@ -1,7 +1,6 @@
 use std::ops::{Mul, Add, Sub, Neg, Div};
 use std::ops::Index;
 use num::abs;
-// use num::Float::sqrt;
 use num::Float;
 use assert_approx_eq::assert_approx_eq;
 
@@ -99,17 +98,54 @@ impl Vector3 {
             v2 = v2 / Float::sqrt(v1.y * v1.y + v1.z * v1.z);
         }
 
-        let mut v3 = v1.cross_product(v2);
+        let v3 = v1.cross_product(v2);
 
         (v1, v2, v3)
+    }
+
+    pub fn min_component(&self) -> f64 {
+        self.x.min(self.y).min(self.z)
+    }
+
+    pub fn max_component(&self) -> f64 {
+        self.x.max(self.y).max(self.z)
+    }
+
+    pub fn max_dimension(&self) -> usize {
+        let v = vec![self.x, self.y, self.z];
+        let mut max = v[0];
+        let mut min = v[0];
+        let mut max_index = 0;
+        let mut min_index = 0;
+        let mut sum = 0.0;
+
+        for (index, &x) in v.iter().enumerate() {
+            if x > max {
+                max = x;
+                max_index = index;
+            }
+            if x < min {
+                min = x;
+                min_index = index;
+            }
+            sum += x;
+        }
+        max_index
+    }
+
+    pub fn comonent_wise_min(&self, vec: Vector3) -> Vector3 {
+        Vector3{
+            x: f64::min(self.x, vec.x),
+            y: f64::min(self.y, vec.y),
+            z: f64::min(self.z, vec.z)}
     }
 }
 
 
-impl Index<i32> for Vector3 {
+impl Index<usize> for Vector3 {
     type Output = f64;
 
-    fn index(&self, ind: i32) -> &Self::Output {
+    fn index(&self, ind: usize) -> &Self::Output {
         match ind {
             0 => &self.x,
             1 => &self.y,
@@ -173,7 +209,6 @@ impl Div<f64> for Vector3 {
 
 #[cfg(test)]
 mod tests {
-    use std::num::FpCategory::Nan;
     use super::*;
 
     #[test]
@@ -246,6 +281,16 @@ mod tests {
         assert_eq!(v_abs.x, 7.);
         assert_eq!(v_abs.y, 8.);
         assert_eq!(v_abs.z, 9.);
+
+        assert_eq!(v0.min_component(), 0.);
+        assert_eq!(v1.min_component(), 1.);
+        assert_eq!(v2.min_component(), 4.);
+        assert_eq!(v3.min_component(), -9.);
+
+        assert_eq!(v0.max_dimension(), 0);
+        assert_eq!(v1.max_dimension(), 2);
+        assert_eq!(v2.max_dimension(), 2);
+        assert_eq!(v3.max_dimension(), 0);
 
         let v0_normalized = v0.clone().clone_normalized();
         let v1_normalized = v1.clone().clone_normalized();
