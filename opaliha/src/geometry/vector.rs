@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::ops::{Mul, Add, Sub, Neg, Div};
 use std::ops::Index;
 use num::abs;
@@ -138,6 +139,16 @@ impl Vector3 {
             x: f64::min(self.x, vec.x),
             y: f64::min(self.y, vec.y),
             z: f64::min(self.z, vec.z)}
+    }
+
+    pub fn permute(&self, xi: usize, yi: usize, zi: usize) -> Vector3 {
+        let mut set = HashSet::from([xi, yi, zi]);
+        if set.len() != 3 { panic!() }
+        Vector3 {
+            x: self[xi],
+            y: self[yi],
+            z: self[zi]
+        }
     }
 }
 
@@ -292,7 +303,25 @@ mod tests {
         assert_eq!(v2.max_dimension(), 2);
         assert_eq!(v3.max_dimension(), 0);
 
+        assert_eq!(v0.comonent_wise_min(v1), Vector3{x: 0., y: 0., z: 0.});
+        assert_eq!(v1.comonent_wise_min(v2), Vector3{x: 1., y: 2., z: 3.});
+        assert_eq!(v2.comonent_wise_min(v3), Vector3{x: -7., y: -8., z: -9.});
+
         let v0_normalized = v0.clone().clone_normalized();
+        let v1_normalized = v1.clone().clone_normalized();
+        let v2_normalized = v2.clone().clone_normalized();
+        let v3_normalized = v3.clone().clone_normalized();
+        assert!(v0_normalized.norm().is_nan());
+        assert_approx_eq!(v1_normalized.norm(), 1.);
+        assert_approx_eq!(v2_normalized.norm(), 1.);
+        assert_approx_eq!(v3_normalized.norm(), 1.);
+
+        // todo complete tests
+        let v0_permute = v0.permute(2, 1, 0);
+        assert_eq!(v0_permute, v0);
+        assert!(std::panic::catch_unwind(|| v0.permute(0, 1, 0)).is_err());
+        assert!(std::panic::catch_unwind(|| v0.permute(0, 0, 0)).is_err());
+
         let v1_normalized = v1.clone().clone_normalized();
         let v2_normalized = v2.clone().clone_normalized();
         let v3_normalized = v3.clone().clone_normalized();
@@ -336,5 +365,8 @@ mod tests {
         assert_eq!(cross_prod_1_2, Vector3{x: -3., y: 6., z: -3.});
         assert_eq!(cross_prod_2_3, Vector3{x: 3., y: -6., z: 3.});
         assert_eq!(cross_prod_3_1, Vector3{x: -6., y: 12., z: -6.});
+
+        // todo complete tests
+        let vec_sys = v1.build_coordinate_system();
     }
 }
