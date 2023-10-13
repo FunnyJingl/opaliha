@@ -4,6 +4,7 @@ mod materials;
 use crate::geometry::point::Point3;
 use crate::geometry::ray::{Ray3, RayValidity};
 use crate::geometry::vector::Vector3;
+use crate::optical_system::sequential_optical_system::Trace;
 
 mod optical_system;
 
@@ -37,9 +38,11 @@ fn main() {
         direction: Vector3{x: 0., y: 5., z: 50.},
         validity: RayValidity::VALID
     };
+
     r = optsys.trace_ray(r);
 
     println!("{}", optsys);
+    println!("{}", r);
 
     println!("Done!");
 }

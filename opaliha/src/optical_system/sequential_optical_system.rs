@@ -2,7 +2,7 @@ use std::fmt::Formatter;
 use std::fmt;
 use crate::geometry::point::Point3;
 use crate::materials;
-use crate::geometry::ray::Ray3;
+use crate::geometry::ray::{Ray3, RayValidity};
 
 pub enum OpticalSurfaceType {
     // Biconic,
@@ -50,7 +50,7 @@ pub trait OpticalSurface : fmt::Debug {
     fn surface_type(&self) -> &OpticalSurfaceType;
     fn radius(&self) -> Option<f64>;
     fn position(&self) -> Point3;
-    fn trace(&self, ray: Ray3) -> Ray3;
+    fn trace(&self, ray: Ray3) -> Option<Ray3>;
 }
 
 pub struct StandardSurface {
@@ -65,7 +65,7 @@ pub struct StandardSurface {
 
 
 pub trait Trace {
-    fn trace(&self, ray: Ray3) -> Ray3;
+    fn trace_ray(&self, ray: Ray3) -> Ray3;
 }
 
 impl fmt::Debug for StandardSurface {
@@ -86,7 +86,7 @@ impl OpticalSurface for StandardSurface {
     }
     fn radius(&self) -> Option<f64> {Some(self.radius)}
     fn position(&self) -> Point3 { self.position }
-    fn trace(&self, ray: Ray3) {self.trace(ray)}
+    fn trace(&self, ray: Ray3) -> Option<Ray3> {trace(ray, self)}
 }
 
 
@@ -97,9 +97,9 @@ pub struct SequentialOpticalSystem {
 
 
 impl Trace for SequentialOpticalSystem {
-    fn trace(&self, mut ray: Ray3) -> Ray3 {
+    fn trace_ray(&self, mut ray: Ray3) -> Ray3 {
         for surface in self.surfaces.iter() {
-            ray = surface.trace(ray);
+            ray = surface.trace(ray).unwrap();
         }
         ray
     }
@@ -113,13 +113,20 @@ impl SequentialOpticalSystem {
 }
 
 
-pub fn trace(ray: Ray3, surface: Box<dyn OpticalSurface>) {
-    if surface.surface_type() == OpticalSurfaceType::Standard {
-        match surface.radius() {
-            None => trace_plane(ray, surface),
-            Some(r) => panic!()
-        }
-    }
+pub fn trace(ray: Ray3, surface: &StandardSurface) -> Option<Ray3> {
+    Some(ray)
+    // match surface.surface_type() {
+    //     OpticalSurfaceType::Standard => {
+    //             match surface: _surface.radius() {
+    //             None => trace_plane(ray, surface),
+    //             Some(r) => panic!()
+    //         }
+    //     },
+    //     _ => _
+    // }
+    // if surface.surface_type() == OpticalSurfaceType::Standard {
+    //
+    // }
 }
 
 
@@ -133,7 +140,7 @@ pub fn trace_plane(ray: Ray3, surface: Box<dyn OpticalSurface>) -> Option<Ray3> 
 
 fn trace_plane_ray(mut ray: Ray3, z: f64) -> Option<Ray3> {
     if ray.propagate_to_z(z) {
-        ray
+        return Some(ray)
     }
     None
 }
@@ -152,3 +159,4 @@ impl fmt::Display for SequentialOpticalSystem {
         Ok(())
     }
 }
+

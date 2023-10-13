@@ -1,4 +1,6 @@
 use std::collections::HashSet;
+use std::fmt;
+use std::fmt::Formatter;
 use std::ops::{Mul, Add, Sub, Neg, Div};
 use std::ops::Index;
 use num::abs;
@@ -128,6 +130,16 @@ pub fn max_point(p1: Point3, p2: Point3) -> Point3 {
         x: Float::max(p1.x, p2.x),
         y: Float::max(p1.y, p2.y),
         z: Float::max(p1.z, p2.z),
+    }
+}
+
+
+impl fmt::Display for Point3 {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(
+            f, "x - {:.5} y - {:.5} z - {:.5}",
+            self.x, self.y, self.z).map_err(|err| println!("{:?}", err)).ok();
+        Ok(())
     }
 }
 

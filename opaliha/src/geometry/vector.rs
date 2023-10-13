@@ -1,4 +1,6 @@
 use std::collections::HashSet;
+use std::fmt;
+use std::fmt::Formatter;
 use std::ops::{Mul, Add, Sub, Neg, Div};
 use std::ops::Index;
 use num::abs;
@@ -214,6 +216,16 @@ impl Div<f64> for Vector3 {
             0. => panic!(),
             _ => Vector3{x: self.x / rhs, y: self.y / rhs, z: self.z / rhs}
         }
+    }
+}
+
+
+impl fmt::Display for Vector3 {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(
+            f, "x - {:.5} y - {:.5} z - {:.5}",
+            self.x, self.y, self.z).map_err(|err| println!("{:?}", err)).ok();
+        Ok(())
     }
 }
 

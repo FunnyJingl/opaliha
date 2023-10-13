@@ -1,5 +1,6 @@
+use std::fmt;
+use std::fmt::Formatter;
 use crate::geometry::point;
-use crate::geometry::point::Point3;
 use crate::geometry::vector::Vector3;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -38,11 +39,31 @@ impl Ray3 {
         }
         // let t = sum([(a-b)*c for a,b,c in zip(plane_pt, line_pt, plane_norm)]) / dot_prod
         let t = (z - self.origin.z) / dot_prod;
-        self.origin = Point3{
+        self.origin = point::Point3{
             x: self.origin.x + self.direction.x * t,
             y: self.origin.y + self.direction.y * t,
             z: self.origin.z + self.direction.z * t,
         };
         true
+    }
+}
+
+
+impl fmt::Display for Ray3 {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(
+            f, "o - {}, dir - {}, validity - {}",
+            self.origin, self.direction, self.validity).map_err(|err| println!("{:?}", err)).ok();
+        Ok(())
+    }
+}
+
+impl fmt::Display for RayValidity {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            RayValidity::VALID => write!(f, "valid"),
+            RayValidity::INVALID => write!(f, "invalid"),
+            RayValidity::TIR => write!(f, "tir"),
+        }
     }
 }
