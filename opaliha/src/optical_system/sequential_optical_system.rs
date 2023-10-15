@@ -2,7 +2,8 @@ use std::fmt::Formatter;
 use std::fmt;
 use crate::geometry::point::Point3;
 use crate::materials;
-use crate::geometry::ray::{Ray3, RayValidity};
+use crate::geometry::ray::Ray3;
+use crate::geometry::sphere;
 
 pub enum OpticalSurfaceType {
     // Biconic,
@@ -49,6 +50,7 @@ pub trait OpticalSurface : fmt::Debug {
     fn comment(&self) -> &str;
     fn surface_type(&self) -> &OpticalSurfaceType;
     fn radius(&self) -> Option<f64>;
+    fn thickness(&self) -> Option<f64>;
     fn position(&self) -> Point3;
     fn trace(&self, ray: Ray3) -> Option<Ray3>;
 }
@@ -63,6 +65,13 @@ pub struct StandardSurface {
     pub position: Point3,
 }
 
+
+impl StandardSurface {
+    pub fn as_sphere(&self) -> Option<sphere::Sphere> {
+        if self.radius <= 0.0 { return None }
+        Some(sphere::Sphere{origin: self.positio, radius: self.radius})
+    }
+}
 
 pub trait Trace {
     fn trace_ray(&self, ray: Ray3) -> Ray3;
@@ -85,6 +94,7 @@ impl OpticalSurface for StandardSurface {
         &self.surface_type
     }
     fn radius(&self) -> Option<f64> {Some(self.radius)}
+    fn thickness(&self) -> Option<f64> { Some(self.thickness)}
     fn position(&self) -> Point3 { self.position }
     fn trace(&self, ray: Ray3) -> Option<Ray3> {trace(ray, self)}
 }
@@ -114,23 +124,26 @@ impl SequentialOpticalSystem {
 
 
 pub fn trace(ray: Ray3, surface: &StandardSurface) -> Option<Ray3> {
+    match surface.surface_type() {
+        OpticalSurfaceType::Standard => {
+            match surface.radius() {
+                None => trace_plane(ray, surface),
+                Some(_) => trace_sphere(ray, surface)
+            }
+        }
+    };
+
     Some(ray)
-    // match surface.surface_type() {
-    //     OpticalSurfaceType::Standard => {
-    //             match surface: _surface.radius() {
-    //             None => trace_plane(ray, surface),
-    //             Some(r) => panic!()
-    //         }
-    //     },
-    //     _ => _
-    // }
-    // if surface.surface_type() == OpticalSurfaceType::Standard {
-    //
-    // }
 }
 
 
-pub fn trace_plane(ray: Ray3, surface: Box<dyn OpticalSurface>) -> Option<Ray3> {
+pub fn trace_sphere(ray: Ray3, surface: &StandardSurface) -> Option<Ray3> {
+    let intersection = ray.intersect_with_sphere(surface.)
+    Some(ray)
+}
+
+
+pub fn trace_plane(ray: Ray3, surface: &StandardSurface) -> Option<Ray3> {
     // ray go from origin to Z-plane by default
     // if refraction angle is OK -> trace
     // if refraction is broken - return unit vector to Z with origin from brokent point
@@ -148,15 +161,46 @@ fn trace_plane_ray(mut ray: Ray3, z: f64) -> Option<Ray3> {
 
 impl fmt::Display for SequentialOpticalSystem {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(
+            f, "N  |   Type   | Comment |  Radius  | Thickness | Material | Semi-diameter\n"
+        ).map_err(|err| println!("{:?}", err)).ok();
         for (pos, el) in self.surfaces.iter().enumerate() {
-            write!(
-                f, "N  |   Type   | Comment | Radius | Thickness | Material | Semi-diameter\n"
-            ).map_err(|err| println!("{:?}", err)).ok();
             write!(f, "{}  |", (pos + 1).to_string()).map_err(|err| println!("{:?}", err)).ok();
             write!(f, " {} |", el.surface_type()).map_err(|err| println!("{:?}", err)).ok();
-            write!(f, "         | ").map_err(|err| println!("{:?}", err)).ok();
+            write!(f, "         |").map_err(|err| println!("{:?}", err)).ok();
+            write!(f, " {:.3}   |", el.radius().unwrap_or(0.0)).map_err(|err| println!("{:?}", err)).ok();
+            write!(f, " {:.3}   |", el.thickness().unwrap_or(0.0)).map_err(|err| println!("{:?}", err)).ok();
+            write!(f, "          |\n").map_err(|err| println!("{:?}", err)).ok();
         }
         Ok(())
     }
 }
 
+
+// #[cfg(test)]
+// mod tests {
+//     use crate::geometry::vector::Vector3;
+//     use super::*;
+//
+//     #[test]
+//     fn test_ray_sphere_intersection() {
+//         let c0 = Point3::origin();
+//         let c1 = Point3{x: 0.0, y: 3.0, z: 0.0 };
+//
+//         let rad1: f64 = 1.0;
+//         let rad2: f64 = 2.0;
+//         let rad3: f64 = 3.0;
+//
+//         let ray1 = Ray3 {
+//             origin: c0,
+//             direction: Vector3 {
+//                 x: 0.0,
+//                 y: 0.0,
+//                 z: 1.0,
+//             },
+//             validity: RayValidity::VALID,
+//         };
+//         let inter1 = intersect_ray_with_sphere(ray1, c0, rad1);
+//         println!("{}", inter1.unwrap());
+//     }
+// }

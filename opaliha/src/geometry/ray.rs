@@ -1,6 +1,6 @@
 use std::fmt;
-use std::fmt::Formatter;
-use crate::geometry::point;
+use crate::geometry::{point, sphere};
+use crate::geometry::intersection::intersect_ray_with_sphere;
 use crate::geometry::vector::Vector3;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -46,11 +46,15 @@ impl Ray3 {
         };
         true
     }
+
+    pub fn intersect_with_sphere(&self, sphere: sphere::Sphere) -> Option<point::Point3>{
+        intersect_ray_with_sphere(*self, sphere.origin, sphere.radius)
+    }
 }
 
 
 impl fmt::Display for Ray3 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f, "o - {}, dir - {}, validity - {}",
             self.origin, self.direction, self.validity).map_err(|err| println!("{:?}", err)).ok();

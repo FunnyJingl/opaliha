@@ -1,6 +1,3 @@
-use std::fmt;
-
-
 pub trait Material {
     fn name(&self) -> &str;
     fn refraction_index_at(&self, wavelength: f64) -> f64;

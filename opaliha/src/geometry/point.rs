@@ -1,13 +1,10 @@
 use std::collections::HashSet;
 use std::fmt;
 use std::fmt::Formatter;
-use std::ops::{Mul, Add, Sub, Neg, Div};
+use std::ops::{Mul, Add, Sub};
 use std::ops::Index;
 use num::abs;
-use num::complex::ComplexFloat;
 use num::Float;
-use assert_approx_eq::assert_approx_eq;
-use crate::geometry::vector;
 use crate::geometry::vector::Vector3;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -40,8 +37,7 @@ impl Point3 {
     }
 
     pub fn permute(&self, xi: usize, yi: usize, zi: usize) -> Point3 {
-        let mut set = HashSet::from([xi, yi, zi]);
-        if set.len() != 3 { panic!() }
+        if HashSet::from([xi, yi, zi]).len() != 3 { panic!() }
         Point3 {
             x: self[xi],
             y: self[yi],
@@ -145,7 +141,7 @@ impl fmt::Display for Point3 {
 
 
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-}
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+// }
