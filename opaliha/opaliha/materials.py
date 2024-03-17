@@ -100,3 +100,9 @@ def string_list_to_float_list(x):
             except ValueError:
                 res.append(None)
     return res
+
+
+if __name__ == '__main__':
+    import pathlib
+    for i in pathlib.Path('/home/funnyjingl/ambar/dev/opaliha/Zemax/Glasscat').glob('*.[aA][gG][fF]'):
+        _ = GlassCatalog('schott').from_agf('/home/funnyjingl/ambar/dev/opaliha/Zemax/Glasscat/SCHOTT.AGF')
