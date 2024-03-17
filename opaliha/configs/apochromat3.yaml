@@ -1,0 +1,55 @@
+optical_system:
+  type: "sequential"
+  elements:
+    - surface:
+        surface_role: object
+
+    - surface:
+      clear_semi_diameter:
+        value: 80.0
+        is_fixed: true
+      surface_type: standard
+      radius:
+        value: 960.041
+      thickness:
+        value: 30
+      material:
+        name: bafn10
+      surface_role: stop
+
+    - surface:
+      surface_type: standard
+      radius:
+        value: -456.044
+      thickness:
+        value: 30
+      material:
+        name: KZFSN4
+      clear_semi_diameter:
+        value: 80
+        is_fixed: true
+
+    - surface:
+      surface_type: standard
+      radius:
+        value: 241.935
+      thickness:
+        value: 30
+      material:
+        name: bak1
+      clear_semi_diameter:
+        value: 80
+        is_fixed: true
+
+    - surface:
+      surface_type: standard
+      material:
+        name: bak1
+      clear_semi_diameter:
+        value: 80
+        is_fixed: true
+
+    - surface:
+        surface_role: image
+        clear_semi_diameter:
+          value: 0.017

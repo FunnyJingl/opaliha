@@ -1,19 +1,27 @@
 # Opaliha
 
 # TODO
-* [ ] build yaml configs for optical system description
-* [ ] add reading zemax files formats
+* [x] build yaml configs for optical system description
+* [ ] add glass
+  * [ ] check all glass catalogs reader
+  * [ ] add interpolation for refractive index
+* [ ] add ray tracing through seq system
 * [ ] add plot of optical elements
+* [ ] add plot of ray tracing
 * [ ] implement classes of optical elements: lenses, plates, image plane
 * [ ] add glass classes
 * [ ] add Thorlabs elements from catalog
 * [ ] add catalog examples of lenses, devices, glasses, etc.
+* add [zemax](https://support.zemax.com/hc/en-us/articles/1500005486681-Zemax-file-extensions) file formats reading if possible:
+  * [ ] ZMX - ascii specs are opened
+  * [ ] AGF - ascii for glass
+  * [ ] ZMF - glass catalogs
 * [ ] add global constants
 * [ ] test system
 * [ ] doc system
 * [ ] FDTD
 
-# TODO PAN
+# TODO after opensourced
 * [ ] gaussian parameters of OS 
   * [ ] with axial symmetry
   * [ ] with 2 symmetry planes

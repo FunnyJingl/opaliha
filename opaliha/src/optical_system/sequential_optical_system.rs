@@ -69,7 +69,7 @@ pub struct StandardSurface {
 impl StandardSurface {
     pub fn as_sphere(&self) -> Option<sphere::Sphere> {
         if self.radius <= 0.0 { return None }
-        Some(sphere::Sphere{origin: self.positio, radius: self.radius})
+        Some(sphere::Sphere{origin: self.position, radius: self.radius})
     }
 }
 
@@ -138,7 +138,7 @@ pub fn trace(ray: Ray3, surface: &StandardSurface) -> Option<Ray3> {
 
 
 pub fn trace_sphere(ray: Ray3, surface: &StandardSurface) -> Option<Ray3> {
-    let intersection = ray.intersect_with_sphere(surface.)
+    // let intersection = ray.intersect_with_sphere();
     Some(ray)
 }
 
