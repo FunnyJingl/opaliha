@@ -1,13 +1,37 @@
+from typing import Any
+from enum import StrEnum
+
 from pydantic import BaseModel
+from opaliha.wavelength import Wavelength
+
+
+class MaterialType(StrEnum):
+    AIR = "air"
+    GLASS = "glass"
 
 
 class Material(BaseModel):
     name: str = "air"
+    material_type: MaterialType = MaterialType.AIR
+
+    class Config:
+        use_enum_values = True
+
+    def __str__(self):
+        return self.name
+
+    def refractive_index(self, wavelength: Wavelength) -> float:
+        raise NotImplementedError()
 
 
 class Glass(Material):
     def __init__(self, name: str):
         super().__init__(name=name)
+
+    def refractive_index(self, wavelength: Wavelength) -> float:
+        if self.name == 'air':
+            return 1.0
+        return 1.5
 
 
 class GlassCatalog:

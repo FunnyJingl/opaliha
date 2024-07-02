@@ -7,6 +7,14 @@ optical_system:
     - surface:
       clear_semi_diameter:
         value: 80.0
+        is_fixed: false
+      surface_type: standard
+      thickness:
+        value: 100
+
+    - surface:
+      clear_semi_diameter:
+        value: 80.0
         is_fixed: true
       surface_type: standard
       radius:
@@ -15,6 +23,7 @@ optical_system:
         value: 30
       material:
         name: bafn10
+        material_type: glass
       surface_role: stop
 
     - surface:
@@ -25,6 +34,7 @@ optical_system:
         value: 30
       material:
         name: KZFSN4
+        material_type: glass
       clear_semi_diameter:
         value: 80
         is_fixed: true
@@ -37,6 +47,7 @@ optical_system:
         value: 30
       material:
         name: bak1
+        material_type: glass
       clear_semi_diameter:
         value: 80
         is_fixed: true
@@ -45,6 +56,7 @@ optical_system:
       surface_type: standard
       material:
         name: bak1
+        material_type: glass
       clear_semi_diameter:
         value: 80
         is_fixed: true

@@ -1,9 +1,13 @@
 # Opaliha
 
 # TODO
+
+распечатка оптической системы
+
+
 * [x] build yaml configs for optical system description
 * [ ] add glass
-  * [ ] check all glass catalogs reader
+  * [x] check all glass catalogs reader
   * [ ] add interpolation for refractive index
 * [ ] add ray tracing through seq system
 * [ ] add plot of optical elements
