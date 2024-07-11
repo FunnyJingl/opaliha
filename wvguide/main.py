@@ -1,9 +1,15 @@
 import argparse
 from dataclasses import dataclass
+from datetime import datetime
 import numpy as np
 from scipy.optimize import minimize, OptimizeResult
-from typing import Callable
+from typing import Callable, Union
 import logging
+import pathlib
+
+
+logging.getLogger().setLevel(logging.INFO)
+
 
 _TEST_SHAPE_DETECTOR = (100, 100)
 _TEST_NUM_VARIABLES = 10
@@ -33,7 +39,8 @@ _METHOD_DEFAULT = 'L-BFGS-B'
 
 
 def get_args() -> argparse.Namespace:
-    ap = argparse.ArgumentParser('-o', '--output')
+    ap = argparse.ArgumentParser()
+    ap.add_argument('-o', '--output', default='.')
     return ap.parse_args()
 
 
@@ -86,10 +93,14 @@ def loss_function(
 
 
 def build_init_arguments(shape: int = _TEST_NUM_VARIABLES) -> np.ndarray:
-    return (np.random.rand(shape) - 0.5) * 1000
+    return (np.random.rand(shape) - 0.5) * 50
 
 
 def main(args: argparse.Namespace):
+    dt = datetime.now()
+    out = pathlib.Path(args.output) / (f"{dt.year:02d}{dt.month:02d}{dt.day:02d}_"
+                                       f"{dt.hour:02d}_{dt.minute:02d}_{dt.second:02d}")
+    out.mkdir(exist_ok=True, parents=True)
 
     x = build_init_arguments()
     print(x)
@@ -102,18 +113,27 @@ def main(args: argparse.Namespace):
         method=_METHOD_DEFAULT,
         bounds=[(-1000, 1000) for _ in range(_TEST_NUM_VARIABLES)],
         tol=1e-9,
-        callback=callback_save_state,
-        options={'disp': True}
+        callback=get_callback_save_state_func(output_dir=out),
+        options={'disp': True, 'maxiter': 1}
     )
     print(res.x)
+    print('res.hess_inv.todense() ', res.hess_inv.todense())
+    print('res.jac', res.jac)
+    print(dir(res))
 
 
-def callback_save_state(intermediate_result: OptimizeResult):
-    print(intermediate_result)
+def get_callback_save_state_func(output_dir: Union[str, pathlib.Path]):
+    counter = 0
 
-
-def optimize():
-    pass
+    def callback_save_state(intermediate_result: OptimizeResult):
+        nonlocal counter
+        print(dir(intermediate_result))
+        out = pathlib.Path(output_dir) / f"{counter:03d}"
+        out.mkdir(exist_ok=True, parents=True)
+        np.savez(out / 'res.array', x=intermediate_result.x, fun=intermediate_result.fun)
+        print('intermediate_result ', intermediate_result)
+        counter += 1
+    return callback_save_state
 
 
 if __name__ == '__main__':
