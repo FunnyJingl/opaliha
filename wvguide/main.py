@@ -11,9 +11,10 @@ _TEST_NUM_VARIABLES = 10
 
 def test_raytrace(x: np.ndarray):
     # global min for every value is 2
-    noise_amplitude = (x - 2)**2 / 100.
-    noise = np.abs(np.mean(noise_amplitude)) * np.random.normal(scale=0.1, size=_TEST_SHAPE_DETECTOR)
-    values_detector = 0.7 + noise
+    noise_amplitude = np.sum((x - np.arange(x.size))**2 / 100000.)
+    print(noise_amplitude)
+    noise = np.abs(noise_amplitude * np.random.normal(scale=0.2, size=_TEST_SHAPE_DETECTOR))
+    values_detector = 0.7 - noise
     values_detector = np.clip(values_detector, a_min=0., a_max=1.0)  # clip noise on detector values
     return values_detector
 
@@ -80,13 +81,13 @@ def loss_function(
 
 
 def build_init_arguments(shape: int = _TEST_NUM_VARIABLES) -> np.ndarray:
-    return (np.random.rand(shape) - 0.5) * 100
+    return (np.random.rand(shape) - 0.5) * 1000
 
 
 def main(args: argparse.Namespace):
 
     x = build_init_arguments()
-
+    print(x)
     res = minimize(
         fun=loss_function,
         x0=x,
@@ -94,8 +95,8 @@ def main(args: argparse.Namespace):
         hess=None,
         hessp=None,
         method=_METHOD_DEFAULT,
-        bounds=[(-50, 50) for _ in range(_TEST_NUM_VARIABLES)],
-        tol=None,
+        bounds=[(-1000, 1000) for _ in range(_TEST_NUM_VARIABLES)],
+        tol=1e-9,
         callback=callback_save_state,
         options={'disp': True}
     )
