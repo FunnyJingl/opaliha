@@ -9,13 +9,18 @@ _TEST_SHAPE_DETECTOR = (100, 100)
 _TEST_NUM_VARIABLES = 10
 
 
+_NOISE = np.random.normal(scale=0.2, size=_TEST_SHAPE_DETECTOR)
+
+
 def test_raytrace(x: np.ndarray):
     # global min for every value is 2
-    noise_amplitude = np.mean((x - np.arange(x.size))**2 / 100000.)
+    noise_amplitude = np.mean((x - 10)**2 / 10000.)
     print(noise_amplitude)
-    noise = np.abs(noise_amplitude * np.random.normal(scale=0.2, size=_TEST_SHAPE_DETECTOR))
-    values_detector = 0.9 - noise
+    noise = noise_amplitude * _NOISE
+    print(np.mean(noise))
+    values_detector = 0.9 + noise
     values_detector = np.clip(values_detector, a_min=0., a_max=1.0)  # clip noise on detector values
+    print(values_detector[:10, 0])
     return values_detector
 
 
@@ -104,7 +109,7 @@ def main(args: argparse.Namespace):
 
 
 def callback_save_state(intermediate_result: OptimizeResult):
-    pass
+    print(intermediate_result)
 
 
 def optimize():
