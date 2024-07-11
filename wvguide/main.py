@@ -11,10 +11,10 @@ _TEST_NUM_VARIABLES = 10
 
 def test_raytrace(x: np.ndarray):
     # global min for every value is 2
-    noise_amplitude = np.sum((x - np.arange(x.size))**2 / 100000.)
+    noise_amplitude = np.mean((x - np.arange(x.size))**2 / 100000.)
     print(noise_amplitude)
     noise = np.abs(noise_amplitude * np.random.normal(scale=0.2, size=_TEST_SHAPE_DETECTOR))
-    values_detector = 0.7 - noise
+    values_detector = 0.9 - noise
     values_detector = np.clip(values_detector, a_min=0., a_max=1.0)  # clip noise on detector values
     return values_detector
 
@@ -65,9 +65,9 @@ def get_loss_f(loss_f_type: str) -> Callable:
 def loss_function(
         x,
         w_efficiency: float = 1.,
-        efficiency_loss='l1',
+        efficiency_loss='l2',
         w_uniformity: float = 1.,
-        uniformity_loss='l1',
+        uniformity_loss='l2',
 ) -> float:
     # return loss function
     trace_rays_result = trace_rays(x)
