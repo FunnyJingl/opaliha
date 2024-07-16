@@ -3,12 +3,19 @@ from dataclasses import dataclass
 from datetime import datetime
 import numpy as np
 from scipy.optimize import minimize, OptimizeResult
-from typing import Callable, Union
+from typing import Optional, Callable, Union
 import logging
 import pathlib
+import sys
+
+SEED = 0xDEADF00D
+
+np.random.seed(SEED)
 
 
-logging.getLogger().setLevel(logging.INFO)
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+logger.addHandler(logging.StreamHandler(sys.stdout))
 
 
 _TEST_SHAPE_DETECTOR = (100, 100)
@@ -19,7 +26,6 @@ _NOISE = np.random.normal(scale=0.2, size=_TEST_SHAPE_DETECTOR)
 
 
 def test_raytrace(x: np.ndarray):
-    # global min for every value is 2
     noise_amplitude = np.mean((x - 10)**2 / 10000.)
     print(noise_amplitude)
     noise = noise_amplitude * _NOISE
@@ -41,6 +47,9 @@ _METHOD_DEFAULT = 'L-BFGS-B'
 def get_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser()
     ap.add_argument('-o', '--output', default='.')
+    ap.add_argument('-i', '--input', default=None, help='directory with optimizer state from which start optimization')
+    ap.add_argument('-s', '--steps', type=int, default=1_000_000, help='max number of optimizer steps')
+    ap.add_argument('--no-display', action='store_true', help='disable verbose while optimization')
     return ap.parse_args()
 
 
@@ -96,6 +105,36 @@ def build_init_arguments(shape: int = _TEST_NUM_VARIABLES) -> np.ndarray:
     return (np.random.rand(shape) - 0.5) * 50
 
 
+def optimizer_step(
+        fun_loss: Callable,
+        x: np.ndarray,
+        bounds,
+        out,
+        n_iter: int = 0,
+        jac=None,
+        hess=None,
+        hessp=None,
+        method: str = _METHOD_DEFAULT,
+        tol: float = 1e-9,
+        callback: Optional[Callable] = None,
+        disp: bool = True,
+):
+    res = minimize(
+        fun=fun_loss,
+        x0=x,
+        jac=jac,
+        hess=hess,
+        hessp=hessp,
+        method=method,
+        bounds=bounds,
+        tol=tol,
+        callback=callback,
+        options={'disp': disp, 'maxiter': 1}
+    )
+    save_state(res, out, n_iter)
+    return res
+
+
 def main(args: argparse.Namespace):
     dt = datetime.now()
     out = pathlib.Path(args.output) / (f"{dt.year:02d}{dt.month:02d}{dt.day:02d}_"
@@ -103,23 +142,50 @@ def main(args: argparse.Namespace):
     out.mkdir(exist_ok=True, parents=True)
 
     x = build_init_arguments()
-    print(x)
-    res = minimize(
-        fun=loss_function,
-        x0=x,
-        jac=None,
-        hess=None,
-        hessp=None,
-        method=_METHOD_DEFAULT,
-        bounds=[(-1000, 1000) for _ in range(_TEST_NUM_VARIABLES)],
-        tol=1e-9,
-        callback=get_callback_save_state_func(output_dir=out),
-        options={'disp': True, 'maxiter': 1}
-    )
-    print(res.x)
-    print('res.hess_inv.todense() ', res.hess_inv.todense())
-    print('res.jac', res.jac)
-    print(dir(res))
+    bounds = [(-1000, 1000) for _ in range(_TEST_NUM_VARIABLES)]
+    jac = None
+    hess = None
+    hessp = None
+    method = _METHOD_DEFAULT
+    tol = 1e-9
+    callback = get_callback_save_state_func(output_dir=out)
+    n_iter = 0
+    for n_step in range(args.steps):
+        print(x)
+        res = optimizer_step(
+            fun_loss=loss_function,
+            x=x,
+            out=out,
+            bounds=bounds,
+            jac=jac,
+            hess=hess,
+            hessp=hessp,
+            method=method,
+            tol=tol,
+            callback=None,
+            disp=True,
+            n_iter=n_iter
+        )
+        n_iter += 1
+        print(res.x)
+        print('res.hess_inv.todense() ', res.hess_inv.todense())
+        print('res.jac', res.jac)
+        print(dir(res))
+
+
+def save_state(res: OptimizeResult, out, n_iter: int):
+    out = pathlib.Path(out) / f"{n_iter:04d}"
+    out.mkdir(exist_ok=True, parents=True)
+    to_save = {}
+    for field in ('x', 'hess_inv', 'jac', 'nfev', 'nit', 'njev', 'status'):
+        field_value = getattr(res, field, None)
+        if field_value is None:
+            continue
+        elif field == 'hess_inv':
+            field_value = res.hess_inv.todense()
+
+        to_save[field] = field_value
+    np.savez(out / 'res.array', **to_save)
 
 
 def get_callback_save_state_func(output_dir: Union[str, pathlib.Path]):
