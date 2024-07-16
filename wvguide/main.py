@@ -8,6 +8,12 @@ import logging
 import pathlib
 import sys
 
+
+# raytrace - bottleneck (10min)
+# raytrace - simulate raytrace, results are get immediatley and by simulation
+# ZemaxAPI - stub/mock with simulation
+
+
 SEED = 0xDEADF00D
 
 np.random.seed(SEED)
@@ -27,12 +33,12 @@ _NOISE = np.random.normal(scale=0.2, size=_TEST_SHAPE_DETECTOR)
 
 def test_raytrace(x: np.ndarray):
     noise_amplitude = np.mean((x - 10)**2 / 10000.)
-    print(noise_amplitude)
+    # print(noise_amplitude)
     noise = noise_amplitude * _NOISE
-    print(np.mean(noise))
+    # print(np.mean(noise))
     values_detector = 0.9 + noise
     values_detector = np.clip(values_detector, a_min=0., a_max=1.0)  # clip noise on detector values
-    print(values_detector[:10, 0])
+    # print(values_detector[:10, 0])
     return values_detector
 
 
@@ -53,13 +59,24 @@ def get_args() -> argparse.Namespace:
     return ap.parse_args()
 
 
-def loss_efficiency(values_detector) -> float:
+def loss_efficiency(values_detector: np.ndarray) -> float:
     # assumption - overall sum of energy of detector is normalized on energy from light source
+    # values_detector = [0, 1]
+    # np.sum(values_detector) = 1 in ideal case, < 1 in practice
     return np.sum(values_detector) / values_detector.size
 
 
 def loss_uniformity(values_detector: np.ndarray) -> float:
     return np.std(values_detector)
+
+
+# def trace_rays_option(x, option: str):
+#     if option == 'zemax':
+#         return ray_trace_with_zemax(x)   # get after 10min
+#     elif option == 'sim':
+#         return ray_trace_with_simulation(x)  # get after 1 nanosec
+#     else:
+#         raise Exception()
 
 
 def trace_rays(x) -> RayTraceResult:
@@ -86,31 +103,52 @@ def get_loss_f(loss_f_type: str) -> Callable:
 def loss_function(
         x,
         w_efficiency: float = 1.,
-        efficiency_loss='l2',
+        efficiency_loss: str = 'l2',
         w_uniformity: float = 1.,
-        uniformity_loss='l2',
+        uniformity_loss: str = 'l2',
 ) -> float:
+    # loss function: f(x: np.ndarray, *args) -> float
     # return loss function
     trace_rays_result = trace_rays(x)
     values_detector = trace_rays_result.values_detector
 
-    l_eff = get_loss_f(efficiency_loss)(loss_efficiency(values_detector), 1., w_efficiency)
-    l_uni = get_loss_f(uniformity_loss)(loss_uniformity(values_detector), 0., w_uniformity)
+    # get_loss_f(efficiency_loss) -> Callable(y_pred, y_true, w)
+    # l2_loss(loss_efficiency(values_detector), 1., w_efficiency)
+    l_eff = get_loss_f(efficiency_loss)(y_pred=loss_efficiency(values_detector), y_true=1., w=w_efficiency)
+    l_uni = get_loss_f(uniformity_loss)(y_pred=loss_uniformity(values_detector), y_true=0., w=w_uniformity)
     loss = l_eff + l_uni
+    # todo @fil add dump of loss components
     print('loss - ', loss, 'l eff - ', l_eff, 'l uni - ', l_uni)
     return loss
 
 
+def get_current_system_parameters():
+    pass
+
+
 def build_init_arguments(shape: int = _TEST_NUM_VARIABLES) -> np.ndarray:
+    # x should be:
+    # - 1D array: np.array([x1, x2, x3, ...])
+    # - normalized: if nm -> m, if W -> GW, variables should be approx. have the same order of values
+    # x = get_current_system_parameters() <- call Zemax API to get current system parameters
     return (np.random.rand(shape) - 0.5) * 50
+
+
+def init_bounds() -> list[tuple]:
+    # init bounds for variables optimization that will limit values in format
+    # [(min_x1, max_x1), (min_x2, max_x2), ..., (min_xN, max_xN)]
+    # return [(-1000, 1000) for _ in range(_TEST_NUM_VARIABLES)] <- list comprehension
+    res = []
+    for i in range(_TEST_NUM_VARIABLES):
+        res.append((-1000, 1000))
+        # print(i, res)
+    return res
 
 
 def optimizer_step(
         fun_loss: Callable,
         x: np.ndarray,
         bounds,
-        out,
-        n_iter: int = 0,
         jac=None,
         hess=None,
         hessp=None,
@@ -118,7 +156,7 @@ def optimizer_step(
         tol: float = 1e-9,
         callback: Optional[Callable] = None,
         disp: bool = True,
-):
+) -> OptimizeResult:
     res = minimize(
         fun=fun_loss,
         x0=x,
@@ -131,31 +169,31 @@ def optimizer_step(
         callback=callback,
         options={'disp': disp, 'maxiter': 1}
     )
-    save_state(res, out, n_iter)
     return res
 
 
 def main(args: argparse.Namespace):
-    dt = datetime.now()
+    dt = datetime.now()             # get current datetime for naming output
     out = pathlib.Path(args.output) / (f"{dt.year:02d}{dt.month:02d}{dt.day:02d}_"
                                        f"{dt.hour:02d}_{dt.minute:02d}_{dt.second:02d}")
     out.mkdir(exist_ok=True, parents=True)
 
-    x = build_init_arguments()
-    bounds = [(-1000, 1000) for _ in range(_TEST_NUM_VARIABLES)]
-    jac = None
-    hess = None
+    x = build_init_arguments()      # init optimizing variables
+    bounds = init_bounds()  # init bounds for x
+    # https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
+    jac = None              # function for jacobian calculation, None if not implented
+    hess = None             # function for update variables, None if not implemented
     hessp = None
     method = _METHOD_DEFAULT
     tol = 1e-9
-    callback = get_callback_save_state_func(output_dir=out)
-    n_iter = 0
+    # callback = get_callback_save_state_func(output_dir=out)
+    n_iter = 0     # curent iteration
+    x_curr = x
     for n_step in range(args.steps):
-        print(x)
+        print('x -> ', x)
         res = optimizer_step(
             fun_loss=loss_function,
-            x=x,
-            out=out,
+            x=x_curr,
             bounds=bounds,
             jac=jac,
             hess=hess,
@@ -164,8 +202,10 @@ def main(args: argparse.Namespace):
             tol=tol,
             callback=None,
             disp=True,
-            n_iter=n_iter
         )
+        save_state(res, out, n_iter)
+
+        x_curr = res.x   # <- update with current optimizer values
         n_iter += 1
         print(res.x)
         print('res.hess_inv.todense() ', res.hess_inv.todense())
