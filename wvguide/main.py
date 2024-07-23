@@ -1,4 +1,5 @@
 import argparse
+import json
 from dataclasses import dataclass
 from datetime import datetime
 import numpy as np
@@ -7,6 +8,50 @@ from typing import Optional, Callable, Union
 import logging
 import pathlib
 import sys
+
+# n_obj, n_par
+_METADATA = {
+    0: "lens_1",
+    1: "surface_1",
+}
+# 0 - var
+# 1 - var
+# 2
+# 3
+# 4 - var
+
+# v = code(n_obj, n_par)  # float
+# data_state = {
+#     0: {
+#         "name": _METADATA[0],
+#         "value": v,
+#         "n_par": n_par
+#     },
+#     1: {
+#         "name": _METADATA[1],
+#         "value": v,
+#         "n_par": n_par
+#     },
+#     4: {
+#         "name": _METADATA[4],
+#         "value": v,
+#         "n_par": n_par
+#     },
+# }
+# list(data_state.keys())
+#
+# # save state
+# with open(path, 'w') as f:
+#     json.dump(data_state, f)
+#
+#
+# # load state
+# with open(path, 'r') as f:
+#     data_state = json.load(f)
+#
+# # unpack state into fields of system
+# zemax_api.set_value(n_obj, data_state[n_obj]['value'])
+
 
 
 # raytrace - bottleneck (10min)
